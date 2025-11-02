@@ -18,7 +18,7 @@ export function HorseCaptcha({
   onSuccess,
   onFail,
 }: {
-  imageUrl: string; // url de l'image complète (cheval)
+  imageUrl: string; // url de l'image
   onSuccess: () => void;
   onFail?: (reason?: string) => void;
 }) {
@@ -26,7 +26,7 @@ export function HorseCaptcha({
   const [tiles, setTiles] = useState<Tile[] | null>(null);
   const [clicked, setClicked] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
-  const [hint, setHint] = useState<string>("Cliquez les 4 parties du cheval, du fessier → tête");
+  const [hint, setHint] = useState<string>("Ordre: Top left -> Top right -> bottom left -> bottom right");
 
   // fetch new captcha from server
   const fetchNew = async () => {

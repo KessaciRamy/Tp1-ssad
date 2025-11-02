@@ -27,7 +27,13 @@ export async function POST( req: Request) {
         break;
         case "Playfair":
                     const meta = JSON.parse(message.key);
-                    decryptedContent = playfairDecrypt(message.content, meta);
+                    decryptedContent = playfairDecrypt(
+                                                      message.content,
+                                                      meta.key,
+                                                      meta.size,
+                                                      meta.mergeJ,
+                                                      meta
+                                                      );
         break;
         default:
                     return NextResponse.json(

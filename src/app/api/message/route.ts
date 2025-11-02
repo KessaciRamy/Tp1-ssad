@@ -22,7 +22,7 @@ export async function POST(req: Request) {
             break;
             case "Playfair": 
                             const result = playfairEncrypt( content, key);
-                            encryptedContent = JSON.stringify(result.ciphertext);
+                            encryptedContent = result.ciphertext;
                             finalKey = JSON.stringify(result.meta)
             break;
             default:

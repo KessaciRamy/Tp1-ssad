@@ -5,12 +5,14 @@ import { MessageForm } from "./components/message-form";
 import { MessageList } from "./components/message-list";
 import { PopupSettings } from "./components/settings";
 import { AuthModal } from "./components/auth-modal";
+import { MessageManager } from "./components/attacker";
 import { Users, Settings } from "lucide-react"
 import { HorseCaptcha } from "./components/captcha";
 
 
 export default function Home() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [algorithmSettings, setAlgorithmSettings] = useState({
     algorithm: "",
@@ -26,8 +28,13 @@ export default function Home() {
       />
     );
   if (!isAuthenticated) {
-    return <AuthModal onAuthenticate={() => setIsAuthenticated(true)} />
+    return <AuthModal onAuthenticate={(user) => {
+          setUsername(user);
+          setIsAuthenticated(true);
+        }} />
   }
+if(username === "marwa") return <MessageManager />
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
       <header className="bg-slate-950/50 backdrop-blur-sm border-b border-slate-700/50 px-6 py-4 flex items-center justify-between">

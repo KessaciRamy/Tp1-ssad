@@ -20,5 +20,5 @@ export async function POST(req:NextRequest) {
             return NextResponse.json({ error: "Invalid username or password" }, { status: 401 });
         }
 
-            return NextResponse.json({ success: true, message: "Authentication successful" });
+            return NextResponse.json({ success: true, message: "Authentication successful", username: user.username });
         }

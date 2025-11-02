@@ -9,10 +9,11 @@ interface AuthModalProps {
   onAuthenticate: () => void
 }
 
-export function AuthModal({ onAuthenticate }: AuthModalProps) {
+export function AuthModal({ onAuthenticate }: { onAuthenticate: (username: string) => void }) {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [failedAttempts, setFailedAttempts] = useState(0);
 
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault()
@@ -28,6 +29,15 @@ export function AuthModal({ onAuthenticate }: AuthModalProps) {
     const data = await res.json();
 
     if (!res.ok) {
+      setFailedAttempts((prev) => {
+        const newCount = prev + 1;
+        if (newCount >= 5) {
+            alert("Too many failed attempts. Refreshing page...");
+            window.location.reload();
+          }
+
+          return newCount;
+      });
       // Login failed — show the error, do NOT authenticate
       setTimeout(() => {
         setError(data.error || "Invalid username or password");
@@ -35,8 +45,8 @@ export function AuthModal({ onAuthenticate }: AuthModalProps) {
       }, 2000);
       return;
     }
-
-    onAuthenticate();
+    console.log(username)
+    onAuthenticate(username);
 
   } catch (err: any) {
     // Handle network or unexpected errors
@@ -55,7 +65,7 @@ export function AuthModal({ onAuthenticate }: AuthModalProps) {
           <div className="p-3 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg">
             <Lock className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Projet SSAD debile</h1>
+          <h1 className="text-2xl font-bold text-white">Crypto app</h1>
         </div>
 
         {/* Form */}

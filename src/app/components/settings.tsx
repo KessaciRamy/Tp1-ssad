@@ -87,7 +87,7 @@ export function PopupSettings({ show, onClose, onSave }: PopupSettingsProps) {
       <div className="bg-slate-900 text-white w-[90%] max-w-md rounded-2xl shadow-2xl border border-slate-700/70 p-6 space-y-6 animate-fadeIn  max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <h2 className="text-xl font-semibold text-center text-cyan-400">
-          Encryption Settings
+         Crypto Settings
         </h2>
 
         {/* Select Algorithm */}
