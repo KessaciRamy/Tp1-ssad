@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { ListRestart } from "lucide-react";
 
-
 export interface Message {
   id: number;
   content: string;
@@ -13,43 +12,40 @@ export interface Message {
 }
 
 export function MessageManager() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
+  const [message, setMessage] = useState<Message | null>(null);
+  const [editing, setEditing] = useState(false);
   const [newContent, setNewContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Fetch messages (decrypted automatically)
-  const fetchMessages = async () => {
+  // Fetch the latest message
+  const fetchMessage = async () => {
     try {
+      setError("");
       const res = await fetch("/api/MITM/intercept");
       const data = await res.json();
       if (data.success) {
-        setMessages(data.messages);
+        // Adjust depending on API: message or messages[0]
+        setMessage(data.message || data.messages?.[0] || null);
       } else {
-        setError("Failed to load messages");
+        setError("Failed to load message");
       }
     } catch {
-      setError("Server error while loading messages");
+      setError("Server error while loading message");
     }
   };
 
   useEffect(() => {
-    fetchMessages();
+    fetchMessage();
   }, []);
 
-  // Handle modify button click
-  const handleEditClick = (message: Message) => {
-    setEditingMessageId(message.id);
-    setNewContent(message.decryptedContent || message.content);
-  };
-
-  // Handle save
-  const handleSave = async (id: number) => {
+  // Save modifications
+  const handleSave = async () => {
+    if (!message) return;
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`/api/message/${id}`, {
+      const res = await fetch(`/api/message/${message.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: newContent }),
@@ -57,8 +53,8 @@ export function MessageManager() {
 
       const data = await res.json();
       if (data.success) {
-        setEditingMessageId(null);
-        fetchMessages(); // Refresh list
+        setEditing(false);
+        fetchMessage();
       } else {
         setError("Failed to update message");
       }
@@ -71,24 +67,22 @@ export function MessageManager() {
 
   return (
     <div className="space-y-4 max-w-2xl mx-auto">
-        <div
-        className="flex justify-around">
-      <h2 className="text-lg font-semibold text-slate-200 mb-2">Messages</h2>
+      <div className="flex justify-around items-center">
+        <h2 className="text-lg font-semibold text-slate-200 mb-2">Latest Message</h2>
         <button
-        onClick={fetchMessages}
-        className="px-3 py-1 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded-lg"
-        disabled={loading}>
-            <ListRestart />
+          onClick={fetchMessage}
+          className="px-3 py-1 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded-lg"
+          disabled={loading}
+        >
+          <ListRestart />
         </button>
-        </div>
+      </div>
+
       {error && <p className="text-red-400 text-sm">{error}</p>}
 
-      {messages.map((message) => (
-        <div
-          key={message.id}
-          className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4 backdrop-blur-sm hover:border-slate-600/50 transition-colors relative"
-        >
-          {editingMessageId === message.id ? (
+      {message ? (
+        <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4 backdrop-blur-sm hover:border-slate-600/50 transition-colors relative">
+          {editing ? (
             <div className="flex flex-col space-y-2">
               <textarea
                 value={newContent}
@@ -98,14 +92,14 @@ export function MessageManager() {
               />
               <div className="flex justify-end space-x-2">
                 <button
-                  onClick={() => setEditingMessageId(null)}
+                  onClick={() => setEditing(false)}
                   className="px-3 py-1 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded-lg"
                   disabled={loading}
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={() => handleSave(message.id)}
+                  onClick={handleSave}
                   className="px-3 py-1 text-xs bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg"
                   disabled={loading}
                 >
@@ -119,7 +113,10 @@ export function MessageManager() {
                 {message.decryptedContent || message.content}
               </p>
               <button
-                onClick={() => handleEditClick(message)}
+                onClick={() => {
+                  setEditing(true);
+                  setNewContent(message.decryptedContent || message.content);
+                }}
                 className="absolute top-3 right-3 bg-cyan-600 hover:bg-cyan-700 text-white text-xs px-3 py-1 rounded-lg"
               >
                 Modify
@@ -127,7 +124,9 @@ export function MessageManager() {
             </>
           )}
         </div>
-      ))}
+      ) : (
+        <p className="text-slate-400 text-sm text-center italic">No messages yet</p>
+      )}
     </div>
   );
 }

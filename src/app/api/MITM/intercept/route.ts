@@ -8,48 +8,57 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    const messages = await prisma.message.findMany();
-
-    const decryptedMessages = messages.map((msg) => {
-      let decryptedContent = msg.content;
-
-      try {
-        switch (msg.algorithm) {
-          case "Ceasar":
-            decryptedContent = ceasar_decrypt(msg.content, parseInt(msg.key));
-            break;
-          case "Hill":
-            const parsedKey = parseHillKey(msg.key);
-            decryptedContent = hill_decrypt(msg.content, parsedKey);
-            break;
-          case "Playfair":
-            const meta = JSON.parse(msg.key);
-            decryptedContent = playfairDecrypt(
-                                                      msg.content,
-                                                      meta.key,
-                                                      meta.size,
-                                                      meta.mergeJ,
-                                                      meta
-                                                      );
-            break;
-          default:
-            decryptedContent = msg.content; // Unknown algorithm, leave as is
-        }
-      } catch (e) {
-        console.error(`Decryption failed for message ID ${msg.id}:`, e);
-      }
-
-      return {
-        ...msg,
-        decryptedContent,
-      };
+    // Get only the most recent message
+    const message = await prisma.message.findFirst({
+      orderBy: { id: "desc" },
     });
 
-    return NextResponse.json({ success: true, messages: decryptedMessages });
+    if (!message) {
+      return NextResponse.json({
+        success: false,
+        error: "No messages found",
+      });
+    }
+
+    let decryptedContent = message.content;
+
+    try {
+      switch (message.algorithm) {
+        case "Ceasar":
+          decryptedContent = ceasar_decrypt(message.content, parseInt(message.key));
+          break;
+
+        case "Hill":
+          const parsedKey = parseHillKey(message.key);
+          decryptedContent = hill_decrypt(message.content, parsedKey);
+          break;
+
+        case "Playfair":
+          const meta = JSON.parse(message.key);
+          decryptedContent = playfairDecrypt(
+            message.content,
+            meta.key,
+            meta.size,
+            meta.mergeJ,
+            meta
+          );
+          break;
+
+        default:
+          decryptedContent = message.content; // Unknown algorithm
+      }
+    } catch (e) {
+      console.error(`Decryption failed for message ID ${message.id}:`, e);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: { ...message, decryptedContent },
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
-      { success: false, error: "Failed to fetch messages" },
+      { success: false, error: "Failed to fetch message" },
       { status: 500 }
     );
   }
